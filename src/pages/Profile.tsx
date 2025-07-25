@@ -4,6 +4,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { User, Heart, Settings, Award, Calendar, LogOut, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import coupleImage from "@/assets/couple-avatars.jpg";
 
 interface ProfileMenuItemProps {
@@ -72,14 +73,16 @@ export const Profile = () => {
     });
   };
 
-  const handleLogout = () => {
-    toast({
-      title: "Come back soon! 👋",
-      description: "You've been logged out successfully",
-      variant: "destructive"
-    });
-    // Here you would add actual logout logic with Supabase
-    navigate('/');
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (!error) {
+      toast({
+        title: "Come back soon! 👋",
+        description: "You've been logged out successfully",
+        variant: "destructive"
+      });
+      navigate('/');
+    }
   };
 
   return (
