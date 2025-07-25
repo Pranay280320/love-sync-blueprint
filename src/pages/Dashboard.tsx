@@ -7,21 +7,77 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { Calendar, Heart, MessageCircle, Sparkles, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Dashboard = () => {
   const [syncScore, setSyncScore] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [upcomingDate, setUpcomingDate] = useState<any>(null);
+  const [lastCheckin, setLastCheckin] = useState<any>(null);
+  const [recentMemory, setRecentMemory] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    // Simulate loading and score animation
-    const timer = setTimeout(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user, loading, navigate]);
+
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch sync score
+      const { data: syncData } = await supabase
+        .from('sync_scores')
+        .select('score')
+        .order('calculated_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      // Fetch upcoming planned date
+      const { data: dateData } = await supabase
+        .from('planned_dates')
+        .select('*')
+        .gte('scheduled_date', new Date().toISOString())
+        .order('scheduled_date', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      // Fetch recent memory
+      const { data: memoryData } = await supabase
+        .from('memories')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      // Fetch last checkin
+      const { data: checkinData } = await supabase
+        .from('daily_checkins')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('checkin_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      setSyncScore(syncData?.score || 75);
+      setUpcomingDate(dateData);
+      setRecentMemory(memoryData);
+      setLastCheckin(checkinData);
       setIsLoaded(true);
-      setSyncScore(82); // Demo score - this would come from your Supabase query
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setIsLoaded(true);
+    }
+  };
 
   const handleCheckinClick = () => {
     navigate('/coach');
@@ -77,23 +133,53 @@ export const Dashboard = () => {
             title="Upcoming Date"
             icon={<Calendar size={20} />}
             expandedContent={
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Clock size={16} className="text-muted-foreground" />
-                  <span className="text-sm font-inter">Tomorrow at 7:00 PM</span>
+              upcomingDate ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Clock size={16} className="text-muted-foreground" />
+                    <span className="text-sm font-inter font-bold">
+                      {new Date(upcomingDate.scheduled_date).toLocaleDateString()} at{' '}
+                      {new Date(upcomingDate.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {upcomingDate.description || "Get ready for an amazing time together! 🌹"}
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Cozy dinner at that Italian place you both love. Don't forget to bring flowers! 🌹
-                </p>
-              </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground font-medium">No upcoming dates planned</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={() => navigate('/planner')}
+                  >
+                    Plan a Date
+                  </Button>
+                </div>
+              )
             }
           >
-            <p className="text-sm font-inter text-muted-foreground font-bold">
-              Romantic dinner tomorrow
-            </p>
-            <p className="text-lg font-poppins font-bold text-foreground">
-              Bella Vista Restaurant
-            </p>
+            {upcomingDate ? (
+              <>
+                <p className="text-sm font-inter text-muted-foreground font-bold">
+                  {new Date(upcomingDate.scheduled_date).toLocaleDateString()}
+                </p>
+                <p className="text-lg font-poppins font-bold text-foreground">
+                  {upcomingDate.title}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-inter text-muted-foreground font-bold">
+                  No dates planned
+                </p>
+                <p className="text-lg font-poppins font-bold text-foreground">
+                  Plan something special!
+                </p>
+              </>
+            )}
           </DashboardCard>
 
           {/* Last Check-in Card */}
@@ -101,28 +187,53 @@ export const Dashboard = () => {
             title="Last Check-in"
             icon={<Heart size={20} />}
             expandedContent={
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-4">
+              lastCheckin ? (
+                <div className="space-y-3">
                   <div className="bg-muted/50 rounded-lg p-3">
-                    <p className="text-xs text-muted-foreground mb-1">You</p>
-                    <p className="text-sm font-medium">Feeling grateful 😊</p>
-                    <p className="text-xs text-muted-foreground mt-1">Energy: 8/10</p>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Partner</p>
-                    <p className="text-sm font-medium">Excited about tonight! 🎉</p>
-                    <p className="text-xs text-muted-foreground mt-1">Energy: 9/10</p>
+                    <p className="text-xs text-muted-foreground mb-1">Your last check-in</p>
+                    <p className="text-sm font-medium">Mood: {lastCheckin.mood}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Energy: {lastCheckin.energy_level}/10
+                    </p>
+                    {lastCheckin.message && (
+                      <p className="text-sm text-muted-foreground mt-2">"{lastCheckin.message}"</p>
+                    )}
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground font-medium">No check-ins yet</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2"
+                    onClick={() => navigate('/coach')}
+                  >
+                    Start Daily Check-in
+                  </Button>
+                </div>
+              )
             }
           >
-            <p className="text-sm font-inter text-muted-foreground font-bold">
-              Yesterday evening
-            </p>
-            <p className="text-lg font-poppins font-bold text-foreground">
-              Both feeling great! ✨
-            </p>
+            {lastCheckin ? (
+              <>
+                <p className="text-sm font-inter text-muted-foreground font-bold">
+                  {new Date(lastCheckin.checkin_date).toLocaleDateString()}
+                </p>
+                <p className="text-lg font-poppins font-bold text-foreground">
+                  Feeling {lastCheckin.mood}! ✨
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-inter text-muted-foreground font-bold">
+                  Start your journey
+                </p>
+                <p className="text-lg font-poppins font-bold text-foreground">
+                  Daily check-in awaits!
+                </p>
+              </>
+            )}
           </DashboardCard>
 
           {/* Recent Memory Card */}
@@ -131,20 +242,36 @@ export const Dashboard = () => {
             icon={<Sparkles size={20} />}
             className="md:col-span-2"
           >
-            <div className="flex gap-4">
-              <div className="w-16 h-16 bg-gradient-romance rounded-xl flex items-center justify-center">
-                <Heart className="text-white" size={24} />
+            {recentMemory ? (
+              <div className="flex gap-4">
+                <div className="w-16 h-16 bg-gradient-romance rounded-xl flex items-center justify-center">
+                  <Heart className="text-white" size={24} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-lg font-poppins font-bold text-foreground mb-1">
+                    {recentMemory.title}
+                  </p>
+                  <p className="text-sm font-inter text-muted-foreground font-semibold">
+                    {recentMemory.content?.substring(0, 100)}...
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {new Date(recentMemory.created_at).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="text-lg font-poppins font-bold text-foreground mb-1">
-                  Beach Sunset Walk
-                </p>
-                <p className="text-sm font-inter text-muted-foreground font-semibold">
-                  "The most beautiful sunset we've ever seen together. Your hand in mine felt like home." 🌅
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">3 days ago</p>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground font-medium">No memories yet</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2"
+                  onClick={() => navigate('/vault')}
+                >
+                  Create Your First Memory
+                </Button>
               </div>
-            </div>
+            )}
           </DashboardCard>
         </div>
 

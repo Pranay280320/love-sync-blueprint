@@ -1,54 +1,58 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Plus, Heart, Camera, Edit3, X, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Memory {
   id: string;
   title: string;
   content: string;
-  date: string;
-  type: 'photo' | 'journal';
-  isFavorite: boolean;
+  memory_date: string;
+  type: 'photo' | 'journal' | 'milestone';
+  is_favorite: boolean;
   tags: string[];
+  created_at: string;
 }
 
-const mockMemories: Memory[] = [
-  {
-    id: '1',
-    title: 'Beach Sunset Walk',
-    content: 'The most beautiful sunset we\'ve ever seen together. Your hand in mine felt like home.',
-    date: '2024-07-22',
-    type: 'journal',
-    isFavorite: true,
-    tags: ['romantic', 'beach', 'sunset']
-  },
-  {
-    id: '2',
-    title: 'First Date Anniversary',
-    content: 'Went back to the same restaurant where we had our first date. Still feels magical!',
-    date: '2024-07-20',
-    type: 'photo',
-    isFavorite: false,
-    tags: ['anniversary', 'restaurant', 'first date']
-  },
-  {
-    id: '3',
-    title: 'Movie Night',
-    content: 'Cuddled up watching our favorite rom-com. You fell asleep on my shoulder again.',
-    date: '2024-07-18',
-    type: 'journal',
-    isFavorite: true,
-    tags: ['cozy', 'movies', 'home']
-  }
-];
-
 export const MemoryVault = () => {
-  const [memories] = useState<Memory[]>(mockMemories);
+  const [memories, setMemories] = useState<Memory[]>([]);
   const [showFABOptions, setShowFABOptions] = useState(false);
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (user) {
+      fetchMemories();
+    }
+  }, [user, authLoading, navigate]);
+
+  const fetchMemories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('memories')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setMemories(data || []);
+    } catch (error) {
+      console.error('Error fetching memories:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddPhoto = () => {
     setShowFABOptions(false);
@@ -102,7 +106,7 @@ export const MemoryVault = () => {
                   <div>
                     <h3 className="font-poppins font-bold text-foreground">{memory.title}</h3>
                     <p className="text-sm text-muted-foreground font-inter font-semibold">
-                      {new Date(memory.date).toLocaleDateString('en-US', { 
+                      {new Date(memory.created_at).toLocaleDateString('en-US', { 
                         year: 'numeric', 
                         month: 'long', 
                         day: 'numeric' 
@@ -110,7 +114,7 @@ export const MemoryVault = () => {
                     </p>
                   </div>
                 </div>
-                {memory.isFavorite && (
+                {memory.is_favorite && (
                   <Star className="text-gold-accent animate-pulse" size={20} fill="currentColor" />
                 )}
               </div>
@@ -186,7 +190,7 @@ export const MemoryVault = () => {
                 <div>
                   <h2 className="text-xl font-extrabold font-poppins text-foreground">{selectedMemory.title}</h2>
                   <p className="text-sm text-muted-foreground font-inter font-bold">
-                    {new Date(selectedMemory.date).toLocaleDateString('en-US', { 
+                    {new Date(selectedMemory.created_at).toLocaleDateString('en-US', { 
                       year: 'numeric', 
                       month: 'long', 
                       day: 'numeric' 
@@ -230,7 +234,7 @@ export const MemoryVault = () => {
               <div className="flex gap-3">
                 <Button variant="romantic" className="flex-1">
                   <Heart className="mr-2" size={16} />
-                  {selectedMemory.isFavorite ? 'Favorited' : 'Add to Favorites'}
+                  {selectedMemory.is_favorite ? 'Favorited' : 'Add to Favorites'}
                 </Button>
                 <Button variant="outline" className="flex-1">
                   <Edit3 className="mr-2" size={16} />

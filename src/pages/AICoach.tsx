@@ -4,6 +4,9 @@ import { Input } from "@/components/ui/input";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Send, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -13,18 +16,70 @@ interface Message {
 }
 
 export const AICoach = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content: "Hello! I'm your AI relationship coach. I'm here to help you and your partner strengthen your connection. What would you like to talk about today? 💕",
-      role: 'assistant',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (user) {
+      initializeChatSession();
+    }
+  }, [user, loading, navigate]);
+
+  const initializeChatSession = async () => {
+    try {
+      // Create or get existing chat session
+      const { data: session, error } = await supabase
+        .from('ai_chat_sessions')
+        .insert({
+          user_id: user?.id,
+          title: 'Daily Check-in Chat'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setSessionId(session.id);
+
+      // Add welcome message
+      const welcomeMessage: Message = {
+        id: '1',
+        content: "Hello! I'm your AI relationship coach. I'm here to help you and your partner strengthen your connection. What would you like to talk about today? 💕",
+        role: 'assistant',
+        timestamp: new Date()
+      };
+
+      setMessages([welcomeMessage]);
+
+      // Save welcome message to database
+      await supabase
+        .from('ai_chat_messages')
+        .insert({
+          session_id: session.id,
+          content: welcomeMessage.content,
+          role: 'assistant'
+        });
+
+    } catch (error) {
+      console.error('Error initializing chat session:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start chat session",
+        variant: "destructive"
+      });
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -35,7 +90,7 @@ export const AICoach = () => {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !sessionId) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -48,25 +103,50 @@ export const AICoach = () => {
     setNewMessage("");
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const responses = [
-        "That's a wonderful insight! Communication is indeed the foundation of any strong relationship. Have you tried expressing this to your partner using 'I' statements?",
-        "I understand how challenging that can feel. Remember, every relationship has its ups and downs. What matters is how you both navigate through them together.",
-        "It sounds like you're both putting in effort, which is beautiful! Small gestures of appreciation can go a long way. When did you last tell your partner something you're grateful for?",
-        "Quality time is so important! Even 15 minutes of undivided attention each day can strengthen your bond. What's your favorite way to connect with your partner?"
-      ];
+    try {
+      // Save user message to database
+      await supabase
+        .from('ai_chat_messages')
+        .insert({
+          session_id: sessionId,
+          content: userMessage.content,
+          role: 'user'
+        });
 
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        content: responses[Math.floor(Math.random() * responses.length)],
-        role: 'assistant',
-        timestamp: new Date()
-      };
+      // Simulate AI response (in a real app, this would call an AI service)
+      setTimeout(async () => {
+        const responses = [
+          "That's a wonderful insight! Communication is indeed the foundation of any strong relationship. Have you tried expressing this to your partner using 'I' statements?",
+          "I understand how challenging that can feel. Remember, every relationship has its ups and downs. What matters is how you both navigate through them together.",
+          "It sounds like you're both putting in effort, which is beautiful! Small gestures of appreciation can go a long way. When did you last tell your partner something you're grateful for?",
+          "Quality time is so important! Even 15 minutes of undivided attention each day can strengthen your bond. What's your favorite way to connect with your partner?"
+        ];
 
-      setMessages(prev => [...prev, aiResponse]);
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          content: responses[Math.floor(Math.random() * responses.length)],
+          role: 'assistant',
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, aiResponse]);
+        setIsTyping(false);
+
+        // Save AI response to database
+        await supabase
+          .from('ai_chat_messages')
+          .insert({
+            session_id: sessionId,
+            content: aiResponse.content,
+            role: 'assistant'
+          });
+
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error saving message:', error);
       setIsTyping(false);
-    }, 2000);
+    }
 
     toast({
       title: "Message sent! 📨",
