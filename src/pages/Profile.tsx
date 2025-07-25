@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { User, Heart, Settings, Award, Calendar, LogOut, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import coupleImage from "@/assets/couple-avatars.jpg";
 
 interface ProfileMenuItemProps {
@@ -54,11 +55,20 @@ export const Profile = () => {
   });
   
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleMenuClick = (action: string) => {
+  const handleMenuClick = (action: string, route?: string) => {
+    if (route) {
+      navigate(route);
+    }
     toast({
       title: `${action} clicked! ⚙️`,
-      description: "This feature is coming soon",
+      description: action === "Edit Profile" ? "Update your profile information" : 
+                  action === "Preferences" ? "Customize your relationship settings" :
+                  action === "Quests" ? "View your relationship challenges" :
+                  action === "Date History" ? "See all your amazing dates" :
+                  action === "Settings" ? "Manage app preferences" : 
+                  "This feature is coming soon",
     });
   };
 
@@ -68,6 +78,8 @@ export const Profile = () => {
       description: "You've been logged out successfully",
       variant: "destructive"
     });
+    // Here you would add actual logout logic with Supabase
+    navigate('/');
   };
 
   return (
@@ -147,7 +159,7 @@ export const Profile = () => {
               icon={<Calendar size={20} />}
               title="Date History"
               subtitle={`${relationshipStats.dateCount} amazing dates`}
-              onClick={() => handleMenuClick("Date History")}
+              onClick={() => handleMenuClick("Date History", "/planner")}
             />
           </div>
         </div>

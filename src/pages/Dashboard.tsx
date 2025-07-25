@@ -24,7 +24,7 @@ export const Dashboard = () => {
   }, []);
 
   const handleCheckinClick = () => {
-    navigate('/ai-coach');
+    navigate('/coach');
     toast({
       title: "Starting Daily Check-in! 💕",
       description: "Let's see how you're both feeling today",
@@ -32,7 +32,7 @@ export const Dashboard = () => {
   };
 
   const handlePlanDateClick = () => {
-    navigate('/date-planner');
+    navigate('/planner');
     toast({
       title: "Time to plan something special! ✨",
       description: "Let's find the perfect date idea for you two",

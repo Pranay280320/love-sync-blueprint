@@ -54,7 +54,7 @@ export const MemoryVault = () => {
     setShowFABOptions(false);
     toast({
       title: "Add Photo Memory 📸",
-      description: "Capture a beautiful moment together",
+      description: "Camera functionality would open here",
     });
   };
 
@@ -62,7 +62,7 @@ export const MemoryVault = () => {
     setShowFABOptions(false);
     toast({
       title: "Add Journal Entry ✍️",
-      description: "Write about your special moments",
+      description: "Journal editor would open here",
     });
   };
 
