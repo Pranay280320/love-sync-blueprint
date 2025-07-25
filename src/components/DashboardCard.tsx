@@ -27,7 +27,7 @@ export const DashboardCard = ({
   return (
     <div className={`relative ${className}`}>
       <div 
-        className={`bg-card rounded-2xl p-6 shadow-soft hover:shadow-romantic transition-all duration-300 cursor-pointer transform hover:scale-105 ${
+        className={`bg-card rounded-2xl p-6 shadow-soft hover:shadow-romantic transition-all duration-200 cursor-pointer transform hover:scale-102 ${
           isExpanded ? 'ring-2 ring-secondary/20' : ''
         }`}
         onClick={handleToggle}
@@ -37,7 +37,7 @@ export const DashboardCard = ({
             <div className="p-2 bg-gradient-romance rounded-full text-white">
               {icon}
             </div>
-            <h3 className="font-poppins font-semibold text-foreground">{title}</h3>
+            <h3 className="font-poppins font-bold text-foreground">{title}</h3>
           </div>
           {expandedContent && (
             <div className="text-muted-foreground">

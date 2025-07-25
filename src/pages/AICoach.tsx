@@ -90,8 +90,8 @@ export const AICoach = () => {
             <Sparkles size={24} />
           </div>
           <div>
-            <h1 className="text-xl font-bold font-poppins">AI Relationship Coach</h1>
-            <p className="text-white/80 text-sm font-inter">Always here to help your love grow</p>
+            <h1 className="text-xl font-extrabold font-poppins">AI Relationship Coach</h1>
+            <p className="text-white/80 text-sm font-inter font-bold">Always here to help your love grow</p>
           </div>
         </div>
       </div>
@@ -110,7 +110,7 @@ export const AICoach = () => {
                   : 'bg-card shadow-soft mr-12'
               }`}
             >
-              <p className="font-inter text-sm leading-relaxed">{message.content}</p>
+              <p className="font-inter text-sm leading-relaxed font-medium">{message.content}</p>
               <p className={`text-xs mt-2 ${
                 message.role === 'user' ? 'text-white/70' : 'text-muted-foreground'
               }`}>

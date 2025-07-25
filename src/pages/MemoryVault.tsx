@@ -78,8 +78,8 @@ export const MemoryVault = () => {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-gradient-romance text-white p-6 shadow-romantic">
-        <h1 className="text-2xl font-bold font-poppins mb-2">Memory Vault</h1>
-        <p className="text-white/80 font-inter">Your love story, beautifully preserved</p>
+        <h1 className="text-2xl font-extrabold font-poppins mb-2">Memory Vault</h1>
+        <p className="text-white/80 font-inter font-bold">Your love story, beautifully preserved</p>
       </div>
 
       {/* Memories Grid */}
@@ -89,7 +89,7 @@ export const MemoryVault = () => {
             <div
               key={memory.id}
               onClick={() => openMemory(memory)}
-              className="bg-card rounded-2xl p-6 shadow-soft hover:shadow-romantic transition-all duration-300 transform hover:scale-105 cursor-pointer animate-fade-in"
+              className="bg-card rounded-2xl p-6 shadow-soft hover:shadow-romantic transition-all duration-200 transform hover:scale-102 cursor-pointer animate-fade-in"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex items-start justify-between mb-3">
@@ -100,8 +100,8 @@ export const MemoryVault = () => {
                     {memory.type === 'photo' ? <Camera size={16} /> : <Edit3 size={16} />}
                   </div>
                   <div>
-                    <h3 className="font-poppins font-semibold text-foreground">{memory.title}</h3>
-                    <p className="text-sm text-muted-foreground font-inter">
+                    <h3 className="font-poppins font-bold text-foreground">{memory.title}</h3>
+                    <p className="text-sm text-muted-foreground font-inter font-semibold">
                       {new Date(memory.date).toLocaleDateString('en-US', { 
                         year: 'numeric', 
                         month: 'long', 
@@ -115,7 +115,7 @@ export const MemoryVault = () => {
                 )}
               </div>
 
-              <p className="text-muted-foreground font-inter text-sm leading-relaxed mb-3 line-clamp-2">
+              <p className="text-muted-foreground font-inter text-sm leading-relaxed mb-3 line-clamp-2 font-medium">
                 {memory.content}
               </p>
 
@@ -184,8 +184,8 @@ export const MemoryVault = () => {
                   {selectedMemory.type === 'photo' ? <Camera size={20} /> : <Edit3 size={20} />}
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold font-poppins text-foreground">{selectedMemory.title}</h2>
-                  <p className="text-sm text-muted-foreground font-inter">
+                  <h2 className="text-xl font-extrabold font-poppins text-foreground">{selectedMemory.title}</h2>
+                  <p className="text-sm text-muted-foreground font-inter font-bold">
                     {new Date(selectedMemory.date).toLocaleDateString('en-US', { 
                       year: 'numeric', 
                       month: 'long', 
@@ -212,7 +212,7 @@ export const MemoryVault = () => {
                 </div>
               )}
 
-              <p className="text-foreground font-inter leading-relaxed mb-6">
+              <p className="text-foreground font-inter leading-relaxed mb-6 font-medium">
                 {selectedMemory.content}
               </p>
 

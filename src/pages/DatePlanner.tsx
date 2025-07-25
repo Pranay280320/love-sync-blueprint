@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { BottomNavigation } from "@/components/BottomNavigation";
-import { Calendar, MapPin, Clock, DollarSign, Heart, Star } from "lucide-react";
+import { Calendar, MapPin, Clock, DollarSign, Heart, Star, CalendarPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import dateActivitiesImage from "@/assets/date-activities.jpg";
 
@@ -55,6 +56,8 @@ const categories = ['All', 'Outdoor', 'Indoor', 'Adventure', 'Relaxing', 'Creati
 export const DatePlanner = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedIdea, setSelectedIdea] = useState<DateIdea | null>(null);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
   const { toast } = useToast();
 
   const filteredIdeas = activeCategory === 'All' 
@@ -63,18 +66,37 @@ export const DatePlanner = () => {
 
   const handleSchedule = (idea: DateIdea) => {
     setSelectedIdea(idea);
+    setSelectedDate('');
+    setSelectedTime('');
     toast({
       title: "Great choice! 💕",
       description: `Let's schedule "${idea.title}" for you two!`,
     });
   };
 
+  const confirmSchedule = () => {
+    if (!selectedDate || !selectedTime) {
+      toast({
+        title: "Missing details! ⏰",
+        description: "Please select both date and time",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    toast({
+      title: "Date scheduled! 🎉",
+      description: `${selectedIdea?.title} on ${new Date(selectedDate).toLocaleDateString()} at ${selectedTime}`,
+    });
+    setSelectedIdea(null);
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="bg-gradient-romance text-white p-6 shadow-romantic">
-        <h1 className="text-2xl font-bold font-poppins mb-2">Date Planner</h1>
-        <p className="text-white/80 font-inter">Find the perfect date idea for you two</p>
+        <h1 className="text-2xl font-extrabold font-poppins mb-2">Date Planner</h1>
+        <p className="text-white/80 font-inter font-bold">Find the perfect date idea for you two</p>
       </div>
 
       {/* Category Filters */}
@@ -84,11 +106,11 @@ export const DatePlanner = () => {
             <Badge
               key={category}
               variant={activeCategory === category ? "default" : "outline"}
-              className={`px-4 py-2 rounded-full cursor-pointer whitespace-nowrap transition-all duration-300 ${
+              className={`px-4 py-2 rounded-full cursor-pointer whitespace-nowrap transition-all duration-200 ${
                 activeCategory === category 
                   ? 'bg-secondary text-secondary-foreground shadow-romantic transform scale-105' 
-                  : 'hover:bg-muted hover:scale-105'
-              }`}
+                  : 'hover:bg-muted hover:scale-102'
+              } font-bold`}
               onClick={() => setActiveCategory(category)}
             >
               {category}
@@ -102,7 +124,7 @@ export const DatePlanner = () => {
         {filteredIdeas.map((idea, index) => (
           <div
             key={idea.id}
-            className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-romantic transition-all duration-300 transform hover:scale-105 animate-fade-in"
+            className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-romantic transition-all duration-200 transform hover:scale-102 animate-fade-in"
             style={{ animationDelay: `${index * 100}ms` }}
           >
             {/* Image */}
@@ -123,13 +145,13 @@ export const DatePlanner = () => {
             {/* Content */}
             <div className="p-6">
               <div className="flex items-start justify-between mb-3">
-                <h3 className="text-xl font-bold font-poppins text-foreground">{idea.title}</h3>
-                <Badge variant="outline" className="ml-2">
+                <h3 className="text-xl font-extrabold font-poppins text-foreground">{idea.title}</h3>
+                <Badge variant="outline" className="ml-2 font-bold">
                   {idea.category}
                 </Badge>
               </div>
 
-              <p className="text-muted-foreground font-inter mb-4 leading-relaxed">
+              <p className="text-muted-foreground font-inter mb-4 leading-relaxed font-medium">
                 {idea.description}
               </p>
 
@@ -137,15 +159,15 @@ export const DatePlanner = () => {
               <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Clock size={16} />
-                  <span>{idea.duration}</span>
+                  <span className="font-bold">{idea.duration}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <DollarSign size={16} />
-                  <span>{idea.cost}</span>
+                  <span className="font-bold">{idea.cost}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground col-span-2">
                   <MapPin size={16} />
-                  <span>{idea.location}</span>
+                  <span className="font-bold">{idea.location}</span>
                 </div>
               </div>
 
@@ -169,19 +191,41 @@ export const DatePlanner = () => {
           <div className="bg-card rounded-2xl p-6 w-full max-w-md shadow-romantic animate-slide-up">
             <div className="text-center mb-6">
               <Heart className="mx-auto text-secondary mb-2" size={32} />
-              <h3 className="text-xl font-bold font-poppins mb-2">Schedule Your Date</h3>
-              <p className="text-muted-foreground font-inter">
+              <h3 className="text-xl font-extrabold font-poppins mb-2">Schedule Your Date</h3>
+              <p className="text-muted-foreground font-inter font-bold">
                 {selectedIdea.title}
               </p>
             </div>
 
             <div className="space-y-4">
-              <Button variant="romantic" className="w-full">
-                <Calendar className="mr-2" />
-                Choose Date & Time
-              </Button>
-              <Button variant="outline" className="w-full">
-                Add to Calendar
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-bold text-foreground mb-2 block">Select Date</label>
+                  <Input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-foreground mb-2 block">Select Time</label>
+                  <Input
+                    type="time"
+                    value={selectedTime}
+                    onChange={(e) => setSelectedTime(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              
+              <Button 
+                variant="romantic" 
+                className="w-full"
+                onClick={confirmSchedule}
+              >
+                <CalendarPlus className="mr-2" />
+                Confirm Schedule
               </Button>
               <Button 
                 variant="ghost" 

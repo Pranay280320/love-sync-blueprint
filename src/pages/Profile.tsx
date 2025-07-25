@@ -16,11 +16,11 @@ interface ProfileMenuItemProps {
 const ProfileMenuItem = ({ icon, title, subtitle, onClick, variant = 'default' }: ProfileMenuItemProps) => (
   <div
     onClick={onClick}
-    className={`flex items-center justify-between p-4 rounded-xl transition-all duration-300 cursor-pointer ${
+    className={`flex items-center justify-between p-4 rounded-xl transition-all duration-200 cursor-pointer ${
       variant === 'danger' 
         ? 'hover:bg-destructive/10 active:bg-destructive/20' 
         : 'hover:bg-muted/50 active:bg-muted'
-    } transform hover:scale-105`}
+    } transform hover:scale-102`}
   >
     <div className="flex items-center gap-4">
       <div className={`p-2 rounded-full ${
@@ -31,13 +31,13 @@ const ProfileMenuItem = ({ icon, title, subtitle, onClick, variant = 'default' }
         {icon}
       </div>
       <div>
-        <h3 className={`font-poppins font-medium ${
+        <h3 className={`font-poppins font-bold ${
           variant === 'danger' ? 'text-destructive' : 'text-foreground'
         }`}>
           {title}
         </h3>
         {subtitle && (
-          <p className="text-sm text-muted-foreground font-inter">{subtitle}</p>
+          <p className="text-sm text-muted-foreground font-inter font-semibold">{subtitle}</p>
         )}
       </div>
     </div>
@@ -92,8 +92,8 @@ export const Profile = () => {
             </div>
           </div>
           <div className="flex-1">
-            <h1 className="text-xl font-bold font-poppins">Alex & Jordan</h1>
-            <p className="text-white/80 font-inter text-sm">
+            <h1 className="text-xl font-extrabold font-poppins">Alex & Jordan</h1>
+            <p className="text-white/80 font-inter text-sm font-bold">
               Together since July 25, 2023 💕
             </p>
           </div>
@@ -102,12 +102,12 @@ export const Profile = () => {
         {/* Relationship Stats */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white/10 rounded-xl p-3 text-center">
-            <p className="text-2xl font-bold font-poppins">{relationshipStats.daysConnected}</p>
-            <p className="text-white/80 text-xs font-inter">Days Connected</p>
+            <p className="text-2xl font-extrabold font-poppins">{relationshipStats.daysConnected}</p>
+            <p className="text-white/80 text-xs font-inter font-bold">Days Connected</p>
           </div>
           <div className="bg-white/10 rounded-xl p-3 text-center">
-            <p className="text-2xl font-bold font-poppins">{relationshipStats.memoryCount}</p>
-            <p className="text-white/80 text-xs font-inter">Memories Saved</p>
+            <p className="text-2xl font-extrabold font-poppins">{relationshipStats.memoryCount}</p>
+            <p className="text-white/80 text-xs font-inter font-bold">Memories Saved</p>
           </div>
         </div>
       </div>
@@ -116,7 +116,7 @@ export const Profile = () => {
       <div className="p-6 space-y-6">
         {/* Personal Section */}
         <div className="space-y-2">
-          <h2 className="text-lg font-bold font-poppins text-foreground mb-4">Personal</h2>
+          <h2 className="text-lg font-extrabold font-poppins text-foreground mb-4">Personal</h2>
           <div className="bg-card rounded-2xl p-2 shadow-soft">
             <ProfileMenuItem
               icon={<User size={20} />}
@@ -135,7 +135,7 @@ export const Profile = () => {
 
         {/* Progress Section */}
         <div className="space-y-2">
-          <h2 className="text-lg font-bold font-poppins text-foreground mb-4">Progress</h2>
+          <h2 className="text-lg font-extrabold font-poppins text-foreground mb-4">Progress</h2>
           <div className="bg-card rounded-2xl p-2 shadow-soft">
             <ProfileMenuItem
               icon={<Award size={20} />}
@@ -154,7 +154,7 @@ export const Profile = () => {
 
         {/* Settings Section */}
         <div className="space-y-2">
-          <h2 className="text-lg font-bold font-poppins text-foreground mb-4">Settings</h2>
+          <h2 className="text-lg font-extrabold font-poppins text-foreground mb-4">Settings</h2>
           <div className="bg-card rounded-2xl p-2 shadow-soft">
             <ProfileMenuItem
               icon={<Settings size={20} />}
@@ -174,10 +174,10 @@ export const Profile = () => {
         {/* Relationship Milestones */}
         <div className="bg-gradient-glow rounded-2xl p-6 text-center">
           <Heart className="mx-auto text-gold-accent mb-3 animate-heart-pulse" size={32} />
-          <h3 className="font-poppins font-bold text-foreground mb-2">
+          <h3 className="font-poppins font-extrabold text-foreground mb-2">
             Love Level: Soulmates ✨
           </h3>
-          <p className="text-muted-foreground font-inter text-sm">
+          <p className="text-muted-foreground font-inter text-sm font-semibold">
             You've unlocked the highest relationship tier! Keep nurturing your beautiful connection.
           </p>
         </div>

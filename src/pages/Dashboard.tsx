@@ -6,11 +6,13 @@ import { DashboardCard } from "@/components/DashboardCard";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Calendar, Heart, MessageCircle, Sparkles, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export const Dashboard = () => {
   const [syncScore, setSyncScore] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Simulate loading and score animation
@@ -22,6 +24,7 @@ export const Dashboard = () => {
   }, []);
 
   const handleCheckinClick = () => {
+    navigate('/ai-coach');
     toast({
       title: "Starting Daily Check-in! 💕",
       description: "Let's see how you're both feeling today",
@@ -29,6 +32,7 @@ export const Dashboard = () => {
   };
 
   const handlePlanDateClick = () => {
+    navigate('/date-planner');
     toast({
       title: "Time to plan something special! ✨",
       description: "Let's find the perfect date idea for you two",
@@ -48,10 +52,10 @@ export const Dashboard = () => {
       <div className="container mx-auto px-6 py-8 space-y-8">
         {/* Header */}
         <div className={`text-center space-y-2 ${isLoaded ? 'animate-fade-in' : 'opacity-0'}`}>
-          <h1 className="text-3xl font-bold font-poppins text-foreground">
+          <h1 className="text-3xl font-extrabold font-poppins text-foreground">
             Good morning, lovebirds! 💕
           </h1>
-          <p className="text-muted-foreground font-inter">
+          <p className="text-muted-foreground font-inter font-semibold">
             Here's how your relationship is syncing today
           </p>
         </div>
@@ -84,10 +88,10 @@ export const Dashboard = () => {
               </div>
             }
           >
-            <p className="text-sm font-inter text-muted-foreground">
+            <p className="text-sm font-inter text-muted-foreground font-bold">
               Romantic dinner tomorrow
             </p>
-            <p className="text-lg font-poppins font-semibold text-foreground">
+            <p className="text-lg font-poppins font-bold text-foreground">
               Bella Vista Restaurant
             </p>
           </DashboardCard>
@@ -113,10 +117,10 @@ export const Dashboard = () => {
               </div>
             }
           >
-            <p className="text-sm font-inter text-muted-foreground">
+            <p className="text-sm font-inter text-muted-foreground font-bold">
               Yesterday evening
             </p>
-            <p className="text-lg font-poppins font-semibold text-foreground">
+            <p className="text-lg font-poppins font-bold text-foreground">
               Both feeling great! ✨
             </p>
           </DashboardCard>
@@ -132,10 +136,10 @@ export const Dashboard = () => {
                 <Heart className="text-white" size={24} />
               </div>
               <div className="flex-1">
-                <p className="text-lg font-poppins font-semibold text-foreground mb-1">
+                <p className="text-lg font-poppins font-bold text-foreground mb-1">
                   Beach Sunset Walk
                 </p>
-                <p className="text-sm font-inter text-muted-foreground">
+                <p className="text-sm font-inter text-muted-foreground font-semibold">
                   "The most beautiful sunset we've ever seen together. Your hand in mine felt like home." 🌅
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">3 days ago</p>
