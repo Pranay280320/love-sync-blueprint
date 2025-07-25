@@ -35,16 +35,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+        // Only allow access if user is authenticated AND email is confirmed
+        const isVerified = session?.user?.email_confirmed_at != null;
+        setSession(isVerified ? session : null);
+        setUser(isVerified && session ? session.user : null);
         setLoading(false);
       }
     );
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      const isVerified = session?.user?.email_confirmed_at != null;
+      setSession(isVerified ? session : null);
+      setUser(isVerified && session ? session.user : null);
       setLoading(false);
     });
 
