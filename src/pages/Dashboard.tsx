@@ -4,6 +4,8 @@ import { CoupleAvatars } from "@/components/CoupleAvatars";
 import { SyncScoreCircle } from "@/components/SyncScoreCircle";
 import { DashboardCard } from "@/components/DashboardCard";
 import { BottomNavigation } from "@/components/BottomNavigation";
+import { StreakDisplay } from "@/components/StreakDisplay";
+import { CoupleMoodDisplay } from "@/components/CoupleMoodDisplay";
 import { Calendar, Heart, MessageCircle, Sparkles, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +18,11 @@ export const Dashboard = () => {
   const [upcomingDate, setUpcomingDate] = useState<any>(null);
   const [lastCheckin, setLastCheckin] = useState<any>(null);
   const [recentMemory, setRecentMemory] = useState<any>(null);
+  const [checkinStreak, setCheckinStreak] = useState(0);
+  const [loveStreak, setLoveStreak] = useState(0);
+  const [userMood, setUserMood] = useState<string>();
+  const [partnerMood, setPartnerMood] = useState<string>();
+  const [coupleId, setCoupleId] = useState<string>();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -33,10 +40,23 @@ export const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
+      // First, get user's couple relationship
+      const { data: coupleData } = await supabase
+        .from('couples')
+        .select('id, user1_id, user2_id')
+        .or(`user1_id.eq.${user?.id},user2_id.eq.${user?.id}`)
+        .maybeSingle();
+
+      const currentCoupleId = coupleData?.id;
+      setCoupleId(currentCoupleId);
+      
+      const partnerId = coupleData?.user1_id === user?.id ? coupleData?.user2_id : coupleData?.user1_id;
+
       // Fetch sync score
       const { data: syncData } = await supabase
         .from('sync_scores')
         .select('score')
+        .eq('couple_id', currentCoupleId)
         .order('calculated_date', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -45,6 +65,7 @@ export const Dashboard = () => {
       const { data: dateData } = await supabase
         .from('planned_dates')
         .select('*')
+        .eq('couple_id', currentCoupleId)
         .gte('scheduled_date', new Date().toISOString())
         .order('scheduled_date', { ascending: true })
         .limit(1)
@@ -54,23 +75,82 @@ export const Dashboard = () => {
       const { data: memoryData } = await supabase
         .from('memories')
         .select('*')
+        .eq('couple_id', currentCoupleId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      // Fetch last checkin
+      // Fetch last checkin for current user
       const { data: checkinData } = await supabase
         .from('daily_checkins')
         .select('*')
         .eq('user_id', user?.id)
+        .eq('couple_id', currentCoupleId)
         .order('checkin_date', { ascending: false })
         .limit(1)
+        .maybeSingle();
+
+      // Calculate checkin streak
+      const { data: allCheckins } = await supabase
+        .from('daily_checkins')
+        .select('checkin_date, user_id')
+        .eq('couple_id', currentCoupleId)
+        .order('checkin_date', { ascending: false });
+
+      let streak = 0;
+      if (allCheckins && allCheckins.length > 0) {
+        const today = new Date().toDateString();
+        let currentDate = new Date();
+        
+        // Group checkins by date
+        const checkinsByDate = allCheckins.reduce((acc, checkin) => {
+          const date = new Date(checkin.checkin_date).toDateString();
+          if (!acc[date]) acc[date] = [];
+          acc[date].push(checkin.user_id);
+          return acc;
+        }, {} as Record<string, string[]>);
+
+        // Calculate consecutive days where both partners checked in
+        while (true) {
+          const dateStr = currentDate.toDateString();
+          const dayCheckins = checkinsByDate[dateStr];
+          
+          if (dayCheckins && dayCheckins.length === 2) {
+            streak++;
+            currentDate.setDate(currentDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+      }
+
+      // Get today's moods
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: userMoodData } = await supabase
+        .from('daily_checkins')
+        .select('mood')
+        .eq('user_id', user?.id)
+        .eq('couple_id', currentCoupleId)
+        .eq('checkin_date', today)
+        .maybeSingle();
+
+      const { data: partnerMoodData } = await supabase
+        .from('daily_checkins')
+        .select('mood')
+        .eq('user_id', partnerId)
+        .eq('couple_id', currentCoupleId)
+        .eq('checkin_date', today)
         .maybeSingle();
 
       setSyncScore(syncData?.score || 75);
       setUpcomingDate(dateData);
       setRecentMemory(memoryData);
       setLastCheckin(checkinData);
+      setCheckinStreak(streak);
+      setLoveStreak(streak); // For now, love streak = checkin streak
+      setUserMood(userMoodData?.mood);
+      setPartnerMood(partnerMoodData?.mood);
       setIsLoaded(true);
 
     } catch (error) {
@@ -126,8 +206,18 @@ export const Dashboard = () => {
           <CoupleAvatars syncScore={syncScore} animated={isLoaded} />
         </div>
 
+        {/* Love Streaks */}
+        <div className={`${isLoaded ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: '500ms' }}>
+          <StreakDisplay checkinStreak={checkinStreak} loveStreak={loveStreak} />
+        </div>
+
+        {/* Couple Mood Display */}
+        <div className={`${isLoaded ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: '550ms' }}>
+          <CoupleMoodDisplay userMood={userMood} partnerMood={partnerMood} />
+        </div>
+
         {/* Dashboard Cards Grid */}
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isLoaded ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: '600ms' }}>
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${isLoaded ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: '700ms' }}>
           {/* Upcoming Date Card */}
           <DashboardCard
             title="Upcoming Date"
@@ -276,7 +366,7 @@ export const Dashboard = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className={`space-y-4 ${isLoaded ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: '800ms' }}>
+        <div className={`space-y-4 ${isLoaded ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: '900ms' }}>
           <Button 
             variant="romantic" 
             size="xl" 
